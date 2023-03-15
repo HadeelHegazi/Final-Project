@@ -4,7 +4,16 @@ import boto3
 def lambda_handler(event, context):
     # TODO implement
     
-    print(event['Records'][0]['s3']['object']['key'])
+    client = boto3.client('sqs')
+    message_body = json.dumps(event)
+    queue_url = 'https://sqs.us-east-1.amazonaws.com/437652894623/eventsq'
+    
+    response = client.send_message(
+        QueueUrl=queue_url,
+        MessageBody=message_body
+    )
+    
+    print(response)
     print("This is massege from lambda1 -Hadeel-")
     return {
         'statusCode': 200,
