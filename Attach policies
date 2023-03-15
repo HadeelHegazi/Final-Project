@@ -1,0 +1,7 @@
+Attach policies to lambda function
+
+1. Find the IAM role that is associated with your Lambda function and click on its name.
+
+2. Click on the "Attach policies" button.
+
+3. Search for "AmazonSQSFullAccess" and select the policy.
