@@ -1,34 +1,47 @@
 
-import boto3
+import os
 import io
-from docx2pdf import convert
+import boto3
+from PIL import Image
 
 s3_client = boto3.client('s3')
 sqs_clint = boto3.client('sqs')
 
 def text2pdf(event):
-    # Get the bucket name and file key from the S3 event
-    bucket_name = event['Records'][0]['s3']['bucket']['name']
-    file_key = event['Records'][0]['s3']['object']['key']
+    # Set the bucket name and key of the image to be compressed
+    bucket_name = "your-bucket-name"
+    source_key = "path/to/image.jpg"
 
-    # Download the file from S3
-    file_obj = s3_client.get_object(Bucket=bucket_name, Key=file_key)
-    file_content = file_obj['Body'].read()
+    # Set the name of the compressed file
+    compressed_key = "path/to/compressed_image.jpg"
 
-    # Convert the file to PDF
-    pdf_bytes = io.BytesIO()
-    convert(io.BytesIO(file_content), pdf_bytes)
+    # Initialize the S3 client
+    s3 = boto3.client("s3")
 
-    # Upload the PDF to S3
-    pdf_key = file_key.split('.')[0] + '.pdf'
-    s3_client.upload_fileobj(pdf_bytes, bucket_name, pdf_key)
+    # Download the image file from S3
+    response = s3.get_object(Bucket=bucket_name, Key=source_key)
+    image_content = response["Body"].read()
 
-    print(f'File {file_key} converted to {pdf_key} and uploaded to {bucket_name}')
+    # Load the image file into Pillow
+    image = Image.open(io.BytesIO(image_content))
 
-    return {
-        'statusCode': 200,
-        'body': 'File converted and uploaded successfully'
-    }
+    # Compress the image
+    image = image.resize((image.width // 2, image.height // 2))
+
+    # Save the compressed image to a buffer
+    compressed_image_buffer = io.BytesIO()
+    image.save(compressed_image_buffer, format="JPEG")
+
+    # Upload the compressed image file to S3
+    s3.upload_fileobj(
+        compressed_image_buffer,
+        bucket_name,
+        compressed_key,
+        ExtraArgs={"ContentType": "image/jpeg", "ACL": "public-read"},
+    )
+
+    # Delete the original image file from S3
+    s3.delete_object(Bucket=bucket_name, Key=source_key)
 
 # Get the URL of the SQS queue
 queue_url = 'https://sqs.us-east-1.amazonaws.com/437652894623/eventsq'
