@@ -1,0 +1,33 @@
+Dockerizing a my code
+virtualenv
+
+    virtualenv is a better version of venv
+    Install virtualenv as explained here, or:
+    sudo apt install python-virtualenv
+    Create a local virtual environment called myvenv here:
+    virtualenv myvenv
+    Activate the new virtual environment:
+    source myvenv/bin/activate
+    
+
+
+Install the requirement library
+
+    install the boto3 library:
+    pip install boto3
+    install the Pillow library:
+    pip install Pillow
+
+Dockerize the code
+
+    run pip freeze > requirements.txt
+    (note that we could save this file in git - to really freeze out dependencies versions)
+    Build a docker image in the current directory:
+    docker build . -t hadelh/mypythoncode
+    Run the container (detached), exposing the port:
+    docker run -d hadelh/mypythoncode
+
+pull the image:
+
+docker pull hadelh/mypythoncode
+docker run -d -p 80:80 hadelh/mypythoncode
